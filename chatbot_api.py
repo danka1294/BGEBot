@@ -1,0 +1,69 @@
+import os
+import requests
+from bs4 import BeautifulSoup
+from flask import Flask, request, jsonify
+from langchain_openai import ChatOpenAI
+from langchain.chains import RetrievalQA
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_openai import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.docstore.document import Document
+from dotenv import load_dotenv
+
+# Flask-App erstellen
+app = Flask(__name__)
+
+# OpenAI API-Schlüssel setzen
+load_dotenv()
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+
+# 🔹 1. PDF-Dokument laden und verarbeiten
+def load_pdf(pdf_path):
+    loader = PyPDFLoader(pdf_path)
+    return loader.load()
+
+# 🔹 2. Website-Inhalte scrapen
+def scrape_website(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+        paragraphs = soup.find_all("p")
+        text = "\n".join([para.get_text() for para in paragraphs])
+        return Document(page_content=text, metadata={"source": url})
+    return None
+
+# Setze deine Datenquellen hier
+pdf_path = "/Users/danielkainz/Desktop/BGEQuelle.pdf"
+website_url = "https://fuereinander.jetzt"
+
+# Lade PDF und Website-Daten
+documents = load_pdf(pdf_path)
+website_doc = scrape_website(website_url)
+
+# Falls Website-Daten erfolgreich geladen wurden, füge sie hinzu
+if website_doc:
+    documents.append(website_doc)
+
+# 🔹 3. FAISS-Vektordatenbank erstellen
+embedding_function = OpenAIEmbeddings()
+db = FAISS.from_documents(documents, embedding_function)
+db.save_local("faiss_index")
+
+# Lade die FAISS-Datenbank
+db = FAISS.load_local("faiss_index", embedding_function, allow_dangerous_deserialization=True)
+
+# 🔹 4. GPT-4 Modell mit Retrieval nutzen
+llm = ChatOpenAI(model_name="gpt-4", temperature=0.7)
+qa_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=db.as_retriever())
+
+# 🔹 5. API-Endpoint für den ChatBot erstellen
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json()
+    user_input = data["message"]
+    response = qa_chain.run(user_input)
+    return jsonify({"response": response})
+
+# 🔹 6. Flask-Server starten
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5002, debug=True)

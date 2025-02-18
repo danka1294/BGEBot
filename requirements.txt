@@ -1,0 +1,8 @@
+flask
+gunicorn
+openai
+langchain-openai
+faiss-cpu
+pymupdf
+beautifulsoup4
+requests
