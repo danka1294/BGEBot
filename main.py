@@ -66,4 +66,5 @@ def chat():
 
 # Flask-Server starten
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5002, debug=True)
+    port = int(os.environ.get("PORT", 10000))  # Port von Render verwenden
+    app.run(host="0.0.0.0", port=port)
