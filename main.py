@@ -6,23 +6,24 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from dotenv import load_dotenv
+import openai
 
 # Flask-App erstellen
 app = Flask(__name__)
 
 # OpenAI API-Schlüssel setzen
 load_dotenv()
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
 
-# 🔹 1. PDF-Dokument laden und verarbeiten
+# PDF-Dokument laden und verarbeiten
 def load_pdf(pdf_path):
     loader = PyPDFLoader(pdf_path)
     return loader.load()
 
-# 🔹 2. Website-Inhalte scrapen
+# Website-Inhalte scrapen
 def scrape_website(url):
     response = requests.get(url)
     if response.status_code == 200:
@@ -45,7 +46,7 @@ if website_doc:
     documents.append(website_doc)
 
 # FAISS-Vektordatenbank erstellen
-embedding_function = OpenAIEmbeddings()
+embedding_function = OpenAIEmbeddings(openai_api_key=openai.api_key)
 db = FAISS.from_documents(documents, embedding_function)
 db.save_local("faiss_index")
 
