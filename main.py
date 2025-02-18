@@ -44,7 +44,7 @@ website_doc = scrape_website(website_url)
 if website_doc:
     documents.append(website_doc)
 
-# 🔹 3. FAISS-Vektordatenbank erstellen
+# FAISS-Vektordatenbank erstellen
 embedding_function = OpenAIEmbeddings()
 db = FAISS.from_documents(documents, embedding_function)
 db.save_local("faiss_index")
@@ -52,11 +52,11 @@ db.save_local("faiss_index")
 # Lade die FAISS-Datenbank
 db = FAISS.load_local("faiss_index", embedding_function, allow_dangerous_deserialization=True)
 
-# 🔹 4. GPT-4 Modell mit Retrieval nutzen
+# GPT-4 Modell mit Retrieval nutzen
 llm = ChatOpenAI(model_name="gpt-4", temperature=0.7)
 qa_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=db.as_retriever())
 
-# 🔹 5. API-Endpoint für den ChatBot erstellen
+# API-Endpoint für den ChatBot erstellen
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -64,6 +64,6 @@ def chat():
     response = qa_chain.run(user_input)
     return jsonify({"response": response})
 
-# 🔹 6. Flask-Server starten
+# Flask-Server starten
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)
