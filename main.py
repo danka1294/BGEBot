@@ -33,7 +33,7 @@ def scrape_website(url):
     return None
 
 # Setze deine Datenquellen hier
-pdf_path = "/Users/danielkainz/Desktop/BGEQuelle.pdf"
+pdf_path = os.path.join(os.path.dirname(__file__), "BGEQuelle.pdf")
 website_url = "https://fuereinander.jetzt"
 
 # Lade PDF und Website-Daten
