@@ -1,8 +1,9 @@
 flask
-gunicorn
-openai
-langchain-openai
-faiss-cpu
-pymupdf
-beautifulsoup4
 requests
+beautifulsoup4
+langchain
+langchain_openai
+langchain_community
+faiss-cpu
+python-dotenv
+gunicorn
