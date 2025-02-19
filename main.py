@@ -10,9 +10,11 @@ from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from dotenv import load_dotenv
 import openai
+from flask_cors import CORS
 
 # Flask-App erstellen
 app = Flask(__name__)
+CORS(app)  # Fügt CORS-Unterstützung hinzu
 
 # OpenAI API-Schlüssel setzen
 load_dotenv()
